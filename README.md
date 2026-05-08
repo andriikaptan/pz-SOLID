@@ -44,15 +44,63 @@
 │   │   ├── refactored        # код після рефакторингу
 │   │   ├── interfaces        # абстракції та інтерфейси
 │   ├── tests
-│   │   ├── refactored.spec.js
+│   │   ├── refactored.spec.ts
 │   ├── .editorconfig
 │   ├── .gitignore
 │   ├── jest.config.js
 │   ├── package.json
-│   ├── package-lock.json
+│   ├── tsconfig.json
 │   ├── README.md
 └──
 ```
+
+## Аналіз порушень SOLID у вихідному коді
+
+### Вихідний код: `src/original/Book.ts`
+
+**SRP — порушення:**  
+Клас `Book` відповідає одразу за збереження даних, розрахунок ціни, запис в базу даних і відправку повідомлень — це 4 різні відповідальності.
+
+**OCP — порушення:**  
+Метод `calculatePrice()` використовує `if/else` для жанрів. Додавання нового жанру потребує зміни існуючого класу.
+
+**LSP — порушення:**  
+`DigitalBook` перевизначає `calculatePrice()` і кидає виняток. Клас не може замінити батьківський `Book`.
+
+**ISP — порушення:**  
+Інтерфейс `IBookAll` поєднує розрахунок ціни, збереження і сповіщення. Реалізатори змушені реалізовувати непотрібні методи.
+
+**DIP — порушення:**  
+`Book` напряму викликає `console.log` і не залежить від жодних абстракцій.
+
+---
+
+## Рефакторинг
+
+### SRP
+- `Book` — тільки дані книги  
+- `BookRepository` — тільки зберігання  
+- `ConsoleLogger` — тільки логування  
+- `PriceCalculator` — тільки розрахунок ціни  
+- `LibraryService` — координація всіх операцій  
+
+### OCP
+- `PriceCalculator` — стандартна ціна  
+- `SalePriceCalculator` — знижена ціна (новий клас, не змінює PriceCalculator)  
+
+### LSP
+- `FictionBook` і `ScienceBook` повністю замінюють `Book` без порушення поведінки  
+
+### ISP
+- `IBook` — тільки поля книги  
+- `IPriceCalculator` — тільки `calculate()`  
+- `IBookRepository` — тільки `save()`, `findByTitle()`, `getAll()`  
+- `ILogger` — тільки `log()`  
+
+### DIP
+- `LibraryService` залежить від `IBookRepository`, `IPriceCalculator`, `ILogger` — не від конкретних класів  
+
+---
 
 ## Useful links
 
@@ -65,7 +113,3 @@
 [Clean Code Concepts Adapted for JavaScript](https://github.com/ryanmcdermott/clean-code-javascript)
 
 [Dependency Injection in JavaScript](https://javascript.plainenglish.io/dependency-injection-in-javascript-1b82a8101c1a)
-
-
-
-
